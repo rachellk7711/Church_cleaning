@@ -38,7 +38,8 @@
   .btn.primary { border: none; background: #3A5A4C; color: #fff; font-weight: 700; padding: 8px 16px; }
   .btn.small { padding: 4px 12px; font-size: 13px; }
   #warn { font-size: 13px; color: #B0563C; margin: 8px 0 0; font-weight: 600; display: none; }
-  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+  .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 900px) { .slots { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
   .slotRow { display: flex; gap: 8px; align-items: center; }
   .slotNum {
     width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(38,36,31,.22);
@@ -72,7 +73,6 @@
 
   <div class="bar">
     <input type="text" id="dateInput" style="width:116px" aria-label="날짜" />
-    <button class="btn" id="nextSundayBtn" type="button">다음 주일</button>
     <button class="btn primary" id="exportBtn" type="button">이미지 저장</button>
   </div>
 
@@ -406,12 +406,6 @@ function init() {
     persist();
   });
 
-  document.getElementById("nextSundayBtn").addEventListener("click", function () {
-    state.dateStr = nextSunday();
-    dateInput.value = state.dateStr;
-    draw();
-    persist();
-  });
 
   var bulkInput = document.getElementById("bulkInput");
   bulkInput.value = state.bulk;
