@@ -49,10 +49,6 @@
   .slotRow:nth-child(8) { grid-column: 2; grid-row: 3; }
   .slotRow:nth-child(9) { grid-column: 2; grid-row: 4; }
   .slotRow:nth-child(10) { grid-column: 2; grid-row: 5; }
-  @media (max-width: 900px) {
-    .slots { grid-template-columns: 1fr; }
-    .slotRow { grid-column: 1 !important; grid-row: auto !important; width: 100%; }
-  }
   .slotRow { display: flex; gap: 8px; align-items: center; width: 80%; }
   .slotNum {
     width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(38,36,31,.22);
@@ -75,6 +71,20 @@
   #overlayBox p b { color: #56705F; }
   #exportImg { width: 100%; border-radius: 10px; border: 1px solid rgba(38,36,31,.22); }
   .overlayBtns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* ── 모바일 (반드시 맨 아래에 위치해야 적용됨) ── */
+  @media (max-width: 900px) {
+    .slots { grid-template-columns: 1fr; }
+    .slotRow {
+      grid-column: 1 !important; grid-row: auto !important;
+      width: 100%; gap: 6px;
+    }
+    .slotLabel {
+      width: auto; flex: 0 1 auto; min-width: 0;
+      white-space: normal; word-break: keep-all; margin-right: 4px;
+    }
+    .slotRow input { flex: 1 1 45%; min-width: 0; }
+  }
 </style>
 </head>
 <body>
