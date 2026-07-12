@@ -39,14 +39,27 @@
   .btn.small { padding: 4px 12px; font-size: 13px; }
   #warn { font-size: 13px; color: #B0563C; margin: 8px 0 0; font-weight: 600; display: none; }
   .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  @media (max-width: 900px) { .slots { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
-  .slotRow { display: flex; gap: 8px; align-items: center; }
+  .slotRow:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .slotRow:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .slotRow:nth-child(3) { grid-column: 1; grid-row: 3; }
+  .slotRow:nth-child(4) { grid-column: 1; grid-row: 4; }
+  .slotRow:nth-child(5) { grid-column: 1; grid-row: 5; }
+  .slotRow:nth-child(6) { grid-column: 2; grid-row: 1; }
+  .slotRow:nth-child(7) { grid-column: 2; grid-row: 2; }
+  .slotRow:nth-child(8) { grid-column: 2; grid-row: 3; }
+  .slotRow:nth-child(9) { grid-column: 2; grid-row: 4; }
+  .slotRow:nth-child(10) { grid-column: 2; grid-row: 5; }
+  @media (max-width: 900px) {
+    .slots { grid-template-columns: 1fr; }
+    .slotRow { grid-column: 1 !important; grid-row: auto !important; width: 100%; }
+  }
+  .slotRow { display: flex; gap: 8px; align-items: center; width: 80%; }
   .slotNum {
     width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(38,36,31,.22);
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 800; flex-shrink: 0;
   }
-  .slotLabel { width: 108px; font-size: 12px; font-weight: 700; color: #6B6F6B; line-height: 1.25; }
+  .slotLabel { width: 148px; font-size: 12px; font-weight: 700; color: #6B6F6B; line-height: 1.25; white-space: nowrap; flex-shrink: 0; margin-right: 10px; }
   .slotRow input { flex: 1; min-width: 0; font-weight: 700; border-color: rgba(38,36,31,.25); }
   canvas { width: 100%; height: auto; display: block; border-radius: 10px; }
   #overlay {
