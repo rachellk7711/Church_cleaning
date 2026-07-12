@@ -55,7 +55,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 800; flex-shrink: 0;
   }
-  .slotLabel { width: 148px; font-size: 12px; font-weight: 700; color: #6B6F6B; line-height: 1.25; white-space: nowrap; flex-shrink: 0; margin-right: 10px; }
+  .slotLabel { width: 108px; font-size: 12px; font-weight: 700; color: #6B6F6B; line-height: 1.25; }
   .slotRow input { flex: 1; min-width: 0; font-weight: 700; border-color: rgba(38,36,31,.25); }
   canvas { width: 100%; height: auto; display: block; border-radius: 10px; }
   #overlay {
@@ -72,18 +72,13 @@
   #exportImg { width: 100%; border-radius: 10px; border: 1px solid rgba(38,36,31,.22); }
   .overlayBtns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
-  /* ── 모바일 (반드시 맨 아래에 위치해야 적용됨) ── */
+  /* ── 모바일 ── */
   @media (max-width: 900px) {
     .slots { grid-template-columns: 1fr; }
     .slotRow {
       grid-column: 1 !important; grid-row: auto !important;
-      width: 100%; gap: 6px;
+      width: 100%;
     }
-    .slotLabel {
-      width: auto; flex: 0 1 auto; min-width: 0;
-      white-space: normal; word-break: keep-all; margin-right: 4px;
-    }
-    .slotRow input { flex: 1 1 45%; min-width: 0; }
   }
 </style>
 </head>
@@ -356,7 +351,7 @@ function buildSlotInputs() {
 
     var lab = document.createElement("span");
     lab.className = "slotLabel";
-    lab.textContent = s.label + (s.multi ? " (1~3명)" : "");
+    lab.textContent = s.label;
 
     var inp = document.createElement("input");
     inp.type = "text";
