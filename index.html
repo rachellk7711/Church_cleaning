@@ -1,1 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>주내힘교회 성전 청소</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px; background: #F0EEE8; color: #26241F;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  h1 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+  #saveState { font-size: 13px; color: #9A9C96; transition: color .3s; }
+  #saveState.on { color: #56705F; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .card {
+    background: #fff; border-radius: 14px; padding: 16px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.08); margin-bottom: 16px;
+  }
+  .card.tight { padding: 8px; }
+  .card h2 { font-size: 15px; font-weight: 800; margin: 0 0 4px; }
+  .hint { font-size: 13px; color: rgba(38,36,31,.52); margin: 0 0 8px; }
+  .rowTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  input, textarea, button { font-family: inherit; font-size: 14px; }
+  input[type=text], textarea {
+    border: 1px solid #D7D5CC; border-radius: 9px; padding: 8px 10px; background: #fff;
+  }
+  input:focus, textarea:focus { outline: 2px solid #56705F; outline-offset: 1px; }
+  button:focus-visible { outline: 2px solid #56705F; outline-offset: 2px; }
+  textarea { width: 100%; resize: vertical; line-height: 1.6; }
+  .btn {
+    border: 1px solid #C9CBC3; background: #fff; border-radius: 9px;
+    padding: 8px 14px; font-weight: 600; cursor: pointer; color: #3A4A42;
+  }
+  .btn.primary { border: none; background: #3A5A4C; color: #fff; font-weight: 700; padding: 8px 16px; }
+  .btn.small { padding: 4px 12px; font-size: 13px; }
+  #warn { font-size: 13px; color: #B0563C; margin: 8px 0 0; font-weight: 600; display: none; }
+  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+  .slotRow { display: flex; gap: 8px; align-items: center; }
+  .slotNum {
+    width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(38,36,31,.22);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; flex-shrink: 0;
+  }
+  .slotLabel { width: 108px; font-size: 12px; font-weight: 700; color: #6B6F6B; line-height: 1.25; }
+  .slotRow input { flex: 1; min-width: 0; font-weight: 700; border-color: rgba(38,36,31,.25); }
+  canvas { width: 100%; height: auto; display: block; border-radius: 10px; }
+  #overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none;
+    align-items: center; justify-content: center; padding: 20px; z-index: 50;
+  }
+  #overlay.show { display: flex; }
+  #overlayBox {
+    background: #fff; border-radius: 16px; padding: 16px;
+    max-width: 560px; width: 100%; max-height: 88vh; overflow: auto;
+  }
+  #overlayBox p { font-size: 14px; font-weight: 700; margin: 0 0 10px; }
+  #overlayBox p b { color: #56705F; }
+  #exportImg { width: 100%; border-radius: 10px; border: 1px solid rgba(38,36,31,.22); }
+  .overlayBtns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>주내힘교회 성전 청소</h1>
+    <span id="saveState">자동 저장</span>
+  </header>
 
+  <div class="bar">
+    <input type="text" id="dateInput" style="width:116px" aria-label="날짜" />
+    <button class="btn" id="nextSundayBtn" type="button">다음 주일</button>
+    <button class="btn primary" id="exportBtn" type="button">이미지 저장</button>
+  </div>
+
+  <section class="card">
+    <div class="rowTop">
+      <h2>이번주 봉사자</h2>
+      <button class="btn small" id="clearBtn" type="button">지우기</button>
+    </div>
+    <p class="hint">전체 인원(10명 내외)을 공백이나 쉼표로 구분해 입력하면 1번부터 순서대로 배정돼요. 9번까지 한 명씩, 나머지는 모두 10번(로비유리·304호 카페)에 함께 들어가요.</p>
+    <textarea id="bulkInput" rows="3" placeholder="이름을 공백이나 쉼표로 구분해 입력"></textarea>
+    <p id="warn"></p>
+  </section>
+
+  <section class="card">
+    <h2>구역별 담당자</h2>
+    <p class="hint">칸 색이 이미지의 자리 색과 같아요. 직접 고치면 이미지에 바로 반영돼요. 10번은 쉼표로 1~3명까지.</p>
+    <div class="slots" id="slotList"></div>
+  </section>
+
+  <section class="card tight">
+    <canvas id="chart"></canvas>
+  </section>
+</div>
+
+<div id="overlay">
+  <div id="overlayBox">
+    <p><b>공유하기</b>로 갤러리에 저장하거나, 이미지를 <b>길게 눌러</b> 저장하세요.</p>
+    <img id="exportImg" alt="성전 청소 담당표" />
+    <div class="overlayBtns">
+      <button class="btn primary" id="shareBtn" type="button">공유하기 (갤러리 저장)</button>
+      <button class="btn" id="downloadBtn" type="button">파일로 저장</button>
+      <button class="btn" id="closeBtn" type="button">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ── 번호 슬롯: 1~9번 한 명씩, 10번은 나머지 전원(1~3명) ──
+var SLOTS = [
+  { n: 1,  label: "강대상·앞4줄",        color: "#E9E4D8" },
+  { n: 2,  label: "왼쪽 중간",           color: "#EFE5C2" },
+  { n: 3,  label: "왼쪽 뒤",             color: "#EBC9C4" },
+  { n: 4,  label: "중앙왼쪽 앞",         color: "#E9C7AF" },
+  { n: 5,  label: "중앙왼쪽 뒤",         color: "#CBDAC0" },
+  { n: 6,  label: "중앙오른쪽 앞",       color: "#DFC9E0" },
+  { n: 7,  label: "중앙오른쪽 뒤",       color: "#C2D6E3" },
+  { n: 8,  label: "오른쪽 열",           color: "#F0DCC6" },
+  { n: 9,  label: "영아방",              color: "#C7D3CF" },
+  { n: 10, label: "로비유리·304호 카페", color: "#CBC0B5", multi: true }
+];
+
+// ── 캔버스 구역 → 슬롯 매핑 (확정 배치) ──
+var ZONES = [
+  { id: "podium",  slot: 1,  label: "강대상",     geo: { x: 110, y: 120,  w: 858, h: 66  } },
+  { id: "front4",  slot: 1,  label: "앞4줄",      geo: { x: 110, y: 210,  w: 130, h: 150 } },
+  { id: "midL",    slot: 2,                       geo: { x: 110, y: 376,  w: 130, h: 394 } },
+  { id: "backL",   slot: 3,                       geo: { x: 110, y: 786,  w: 130, h: 384 } },
+  { id: "c2f",     slot: 4,                       geo: { x: 266, y: 210,  w: 260, h: 470 } },
+  { id: "c2b",     slot: 5,                       geo: { x: 266, y: 700,  w: 260, h: 470 } },
+  { id: "c3f",     slot: 6,                       geo: { x: 552, y: 210,  w: 260, h: 470 } },
+  { id: "c3b",     slot: 7,                       geo: { x: 552, y: 700,  w: 130, h: 470, lTop: { w: 260, h: 275 } } },
+  { id: "col4",    slot: 8,                       geo: { x: 838, y: 210,  w: 130, h: 765 } },
+  { id: "lobby",   slot: 10, label: "로비유리",   geo: { x: 698, y: 991,  w: 270, h: 179 } },
+  { id: "nursery", slot: 9,  label: "영아방",     geo: { x: 110, y: 1236, w: 380, h: 110 } },
+  { id: "cafe",    slot: 10, label: "304호 카페", geo: { x: 530, y: 1236, w: 438, h: 110 } }
+];
+
+var W = 1080, H = 1380;
+var HALL = { x: 40, y: 88, w: 1000, h: 1120 };
+var INK = "#26241F";
+var SUB = "rgba(38,36,31,0.52)";
+var LINE = "rgba(38,36,31,0.22)";
+var HALL_LINE = "#8FCCC4";
+var FONT = "'Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+var STORAGE_KEY = "zone-chart-v4";
+
+var state = {
+  dateStr: nextSunday(),
+  bulk: "",
+  slots: ["", "", "", "", "", "", "", "", "", ""]
+};
+
+// ── 유틸 ──
+function nextSunday() {
+  var d = new Date();
+  var day = d.getDay();
+  if (day !== 0) d.setDate(d.getDate() + (7 - day));
+  return d.getFullYear() + ". " + (d.getMonth() + 1) + ". " + d.getDate();
+}
+
+function parseNames(text) {
+  return text.split(/[\s,，]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+}
+
+function assignFromNames(names) {
+  var slots = ["", "", "", "", "", "", "", "", "", ""];
+  for (var i = 0; i < 9 && i < names.length; i++) slots[i] = names[i];
+  if (names.length > 9) slots[9] = names.slice(9, 12).join(", ");
+  return slots;
+}
+
+// ── 저장/불러오기 (localStorage) ──
+var saveTimer = null;
+function persist() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      var el = document.getElementById("saveState");
+      el.textContent = "저장됨 ✓";
+      el.className = "on";
+      setTimeout(function () { el.textContent = "자동 저장"; el.className = ""; }, 1200);
+    } catch (e) { /* 시크릿 모드 등에서는 저장 불가 — 무시 */ }
+  }, 600);
+}
+
+function restore() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    var d = JSON.parse(raw);
+    if (d && Array.isArray(d.slots) && d.slots.length === 10) state.slots = d.slots;
+    if (d && typeof d.bulk === "string") state.bulk = d.bulk;
+    if (d && d.dateStr) state.dateStr = d.dateStr;
+  } catch (e) { /* 저장본 손상 시 기본값 */ }
+}
+
+// ── 캔버스 그리기 ──
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function draw() {
+  var canvas = document.getElementById("chart");
+  var S = 2;
+  canvas.width = W * S;
+  canvas.height = H * S;
+  var ctx = canvas.getContext("2d");
+  ctx.scale(S, S);
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = INK;
+  ctx.font = "800 30px " + FONT;
+  ctx.fillText("주내힘교회 성전 청소", HALL.x, 44);
+  ctx.font = "600 22px " + FONT;
+  ctx.fillStyle = SUB;
+  ctx.textAlign = "right";
+  ctx.fillText(state.dateStr, HALL.x + HALL.w, 46);
+  ctx.textAlign = "left";
+
+  roundRectPath(ctx, HALL.x, HALL.y, HALL.w, HALL.h, 20);
+  ctx.strokeStyle = HALL_LINE;
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  function fitSize(text, maxWidth, startSize) {
+    var size = startSize;
+    while (size > 15) {
+      ctx.font = "800 " + size + "px " + FONT;
+      if (ctx.measureText(text).width <= maxWidth) break;
+      size -= 1;
+    }
+    return size;
+  }
+
+  for (var zi = 0; zi < ZONES.length; zi++) {
+    var z = ZONES[zi];
+    var g = z.geo;
+    var color = SLOTS[z.slot - 1].color;
+
+    if (g.lTop) {
+      var r = 12, x = g.x, y = g.y;
+      var wT = g.lTop.w, hT = g.lTop.h, wC = g.w, hA = g.h;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + wT, y, x + wT, y + hT, r);
+      ctx.arcTo(x + wT, y + hT, x + wC, y + hT, r);
+      ctx.arcTo(x + wC, y + hT, x + wC, y + hA, r);
+      ctx.arcTo(x + wC, y + hA, x, y + hA, r);
+      ctx.arcTo(x, y + hA, x, y, r);
+      ctx.arcTo(x, y, x + wT, y, r);
+      ctx.closePath();
+    } else {
+      roundRectPath(ctx, g.x, g.y, g.w, g.h, 12);
+    }
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = LINE;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    var topPad = 0;
+    if (z.label) {
+      ctx.fillStyle = SUB;
+      ctx.font = "700 16px " + FONT;
+      if (z.id === "podium") {
+        ctx.fillText(z.label, g.x + 18, g.y + g.h / 2 + 1);
+      } else {
+        ctx.fillText(z.label, g.x + 16, g.y + 23);
+        topPad = 12;
+      }
+    }
+
+    var name = state.slots[z.slot - 1] || "";
+    if (!name) continue;
+    ctx.fillStyle = INK;
+    var lines = name.split(/[,，]/).map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 3);
+
+    var boxW = g.lTop ? g.lTop.w : g.w;
+    var boxH = g.lTop ? g.lTop.h : g.h;
+    var maxW = boxW - 32;
+    var cx = g.x + boxW / 2;
+    var cy = g.y + boxH / 2 + (g.lTop ? 2 : topPad / 2 + 1);
+    var base = boxH <= 160 ? 25 : 29;
+
+    if (lines.length > 1 && lines.length * base * 1.3 > boxH - 26) {
+      lines = [lines.join(" · ")];
+    }
+    var size = 99;
+    for (var li = 0; li < lines.length; li++) {
+      var s2 = fitSize(lines[li], maxW, base);
+      if (s2 < size) size = s2;
+    }
+    ctx.font = "800 " + size + "px " + FONT;
+    ctx.textAlign = "center";
+    var gapY = size * 1.3;
+    var startY = cy - ((lines.length - 1) * gapY) / 2;
+    for (var lj = 0; lj < lines.length; lj++) {
+      ctx.fillText(lines[lj], cx, startY + lj * gapY);
+    }
+    ctx.textAlign = "left";
+  }
+}
+
+// ── 화면 구성 ──
+function buildSlotInputs() {
+  var list = document.getElementById("slotList");
+  list.innerHTML = "";
+  SLOTS.forEach(function (s, i) {
+    var row = document.createElement("label");
+    row.className = "slotRow";
+
+    var num = document.createElement("span");
+    num.className = "slotNum";
+    num.style.background = s.color;
+    num.textContent = s.n;
+
+    var lab = document.createElement("span");
+    lab.className = "slotLabel";
+    lab.textContent = s.label + (s.multi ? " (1~3명)" : "");
+
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.placeholder = s.multi ? "이름, 이름" : "이름";
+    inp.style.background = s.color;
+    inp.value = state.slots[i];
+    inp.setAttribute("aria-label", s.n + "번 " + s.label + " 담당자");
+    inp.addEventListener("input", function () {
+      state.slots[i] = inp.value;
+      draw();
+      persist();
+    });
+
+    row.appendChild(num);
+    row.appendChild(lab);
+    row.appendChild(inp);
+    list.appendChild(row);
+  });
+}
+
+function refreshSlotInputs() {
+  var inputs = document.querySelectorAll("#slotList input");
+  inputs.forEach(function (inp, i) { inp.value = state.slots[i]; });
+}
+
+// ── 이미지 저장 ──
+function fileName() {
+  return "성전청소_" + state.dateStr.replace(/[.\s]+/g, "-").replace(/-+$/, "") + ".png";
+}
+
+function openExport() {
+  var canvas = document.getElementById("chart");
+  var url = canvas.toDataURL("image/png");
+  document.getElementById("exportImg").src = url;
+  document.getElementById("overlay").className = "show";
+}
+
+function shareImage() {
+  var url = document.getElementById("exportImg").src;
+  fetch(url).then(function (r) { return r.blob(); }).then(function (blob) {
+    var file = new File([blob], fileName(), { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      return navigator.share({ files: [file], title: "주내힘교회 성전 청소 " + state.dateStr });
+    }
+    alert("이 브라우저에서는 공유가 지원되지 않아요. '파일로 저장'을 누르거나 이미지를 길게 눌러 저장해주세요.");
+  }).catch(function (e) {
+    if (!e || e.name !== "AbortError") {
+      alert("공유에 실패했어요. '파일로 저장'을 누르거나 이미지를 길게 눌러 저장해주세요.");
+    }
+  });
+}
+
+function downloadImage() {
+  var a = document.createElement("a");
+  a.download = fileName();
+  a.href = document.getElementById("exportImg").src;
+  a.click();
+}
+
+// ── 이벤트 연결 및 시작 ──
+function init() {
+  restore();
+  buildSlotInputs();
+
+  var dateInput = document.getElementById("dateInput");
+  dateInput.value = state.dateStr;
+  dateInput.addEventListener("input", function () {
+    state.dateStr = dateInput.value;
+    draw();
+    persist();
+  });
+
+  document.getElementById("nextSundayBtn").addEventListener("click", function () {
+    state.dateStr = nextSunday();
+    dateInput.value = state.dateStr;
+    draw();
+    persist();
+  });
+
+  var bulkInput = document.getElementById("bulkInput");
+  bulkInput.value = state.bulk;
+  bulkInput.addEventListener("input", function () {
+    state.bulk = bulkInput.value;
+    var names = parseNames(state.bulk);
+    var warn = document.getElementById("warn");
+    if (names.length > 0) {
+      state.slots = assignFromNames(names);
+      refreshSlotInputs();
+    }
+    if (names.length > 12) {
+      warn.textContent = names.length + "명이 입력됐어요. 13번째부터는 제외됩니다 (최대 12명 = 1~9번 각 1명 + 10번에 3명).";
+      warn.style.display = "block";
+    } else {
+      warn.style.display = "none";
+    }
+    draw();
+    persist();
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", function () {
+    state.bulk = "";
+    bulkInput.value = "";
+    document.getElementById("warn").style.display = "none";
+    persist();
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", openExport);
+  document.getElementById("shareBtn").addEventListener("click", shareImage);
+  document.getElementById("downloadBtn").addEventListener("click", downloadImage);
+  document.getElementById("closeBtn").addEventListener("click", function () {
+    document.getElementById("overlay").className = "";
+  });
+  document.getElementById("overlay").addEventListener("click", function (e) {
+    if (e.target === this) this.className = "";
+  });
+
+  draw();
+}
+
+init();
+</script>
+</body>
+</html>
