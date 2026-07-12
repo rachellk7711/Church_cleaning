@@ -72,13 +72,16 @@
   #exportImg { width: 100%; border-radius: 10px; border: 1px solid rgba(38,36,31,.22); }
   .overlayBtns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
-  /* ── 모바일 ── */
+  /* ── 모바일: 번호·라벨 윗줄 / 입력칸 아랫줄 전체폭 (가로 넘침 불가 구조) ── */
   @media (max-width: 900px) {
+    .wrap, .card { max-width: 100%; overflow-x: hidden; }
     .slots { grid-template-columns: 1fr; }
     .slotRow {
       grid-column: 1 !important; grid-row: auto !important;
-      width: 100%;
+      width: 100%; flex-wrap: wrap; row-gap: 4px;
     }
+    .slotLabel { width: auto; flex: 1; }
+    .slotRow input { flex: 1 1 100%; width: 100%; max-width: 100%; }
   }
 </style>
 </head>
@@ -141,7 +144,7 @@ var SLOTS = [
   { n: 7,  label: "중앙오른쪽 뒤",       color: "#C2D6E3" },
   { n: 8,  label: "오른쪽 열",           color: "#F0DCC6" },
   { n: 9,  label: "영아방",              color: "#C7D3CF" },
-  { n: 10, label: "로비유리·304호 카페", color: "#CBC0B5", multi: true }
+  { n: 10, label: "로비·304호 카페 유리", color: "#CBC0B5", multi: true }
 ];
 
 // ── 캔버스 구역 → 슬롯 매핑 (확정 배치) ──
